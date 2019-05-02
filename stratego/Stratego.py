@@ -1,58 +1,59 @@
+from copy import deepcopy
+
+
 class Stratego:
-    placed = []
-    available = []
-    edges = []
+    size = 4
 
     def __init__(self, size):
+        self.size = size
+        self.placed = []
+        self.available = []
+        self.edges = []
+
         r = range(size)
 
         for i in r:
             for j in r:
-                self.available.append((i, j))
+                new = (i, j)
+                if new not in self.available:
+                    self.available.append(new)
 
-        self.add_straight_edges(size)
+        self.generate_edges(size)
 
-        for i in range(len(self.available)):
-            self.add_right_diagonal_edge(i, size)
-            self.add_left_diagonal_edge(i, size)
-
-            if len(self.edges) == size * 2 + ((size - 3) * 2):
-                break
-
-    def add_right_diagonal_edge(self, i, size):
-        edge = []
-        if i < size:
-            for j in range(i, i + size * (size - i), size + 1):
-                edge.append(self.available[j])
-        elif i % size == 0:
-            for j in range(i, i + size * (size - int(i / size)), size + 1):
-                edge.append(self.available[j])
-
+    def add_edge(self, edge):
         if len(edge) > 1:
-            self.edges.append(edge)
+            sorted_edge = sorted(edge)
 
-    def add_left_diagonal_edge(self, i, size):
-        edge = []
-        if i < size:
-            for j in range(i, i * size + 1, size - 1):
-                edge.append(self.available[j])
-        elif i % size == size - 1:
-            for j in range(i, i + (size - 1) * (size - int(i / size)), size - 1):
-                edge.append(self.available[j])
+            if sorted_edge not in self.edges:
+                self.edges.append(sorted_edge)
 
-        if len(edge) > 1:
-            self.edges.append(edge)
-
-    def add_straight_edges(self, size):
+    def generate_edges(self, size):
         for i in range(size):
             edge1 = []
             edge2 = []
+            edge3 = []
+            edge4 = []
+            edge5 = []
+            edge6 = []
+
             for j in range(size):
                 edge1.append((i, j))
                 edge2.append((j, i))
 
-            self.edges.append(edge1)
-            self.edges.append(edge2)
+            for j in range(size - i):
+                edge3.append((i + j, j))
+                edge4.append((i + j, size - j - 1))
+
+            for j in range(i + 1):
+                edge5.append((i - j, j))
+                edge6.append((i - j, size - j - 1))
+
+            self.add_edge(edge1)
+            self.add_edge(edge2)
+            self.add_edge(edge3)
+            self.add_edge(edge4)
+            self.add_edge(edge5)
+            self.add_edge(edge6)
 
     def count_points(self):
         points = 0
@@ -82,3 +83,11 @@ class Stratego:
 
     def is_finished(self):
         return len(self.available) == 0
+
+    def clone(self):
+        new_stratego = Stratego(self.size)
+        new_stratego.placed = deepcopy(self.placed)
+        new_stratego.edges = deepcopy(self.edges)
+        new_stratego.available = deepcopy(self.available)
+
+        return new_stratego
