@@ -1,24 +1,34 @@
-from copy import deepcopy
-
-
 class Stratego:
-    size = 4
-
-    def __init__(self, size):
+    def __init__(self, size=4, placed=(), available=(), positions=None, edges=None, available_edges=()):
         self.size = size
-        self.placed = []
-        self.available = []
-        self.edges = []
+        self.placed = placed
+        self.available = available
+        self.available_edges = available_edges
 
-        r = range(size)
+        if positions is None:
+            self.positions = []
+            r = range(size)
 
-        for i in r:
-            for j in r:
-                new = (i, j)
-                if new not in self.available:
-                    self.available.append(new)
+            idx = 0
+            for i in r:
+                for j in r:
+                    new = (i, j)
+                    if new not in self.positions:
+                        self.positions.append(new)
+                        self.available += (idx,)
+                        idx += 1
+        else:
+            self.positions = positions
 
-        self.generate_edges(size)
+        if edges is None:
+            self.edges = []
+            self.generate_edges(size)
+
+            self.available_edges = ()
+            for i, edge in enumerate(self.edges):
+                self.available_edges += (i,)
+        else:
+            self.edges = edges
 
     def add_edge(self, edge):
         if len(edge) > 1:
@@ -57,27 +67,27 @@ class Stratego:
 
     def count_points(self):
         points = 0
-        edges_left = []
+        available_edges_left = []
 
-        for edge in self.edges:
+        for edge in self.available_edges:
             edge_completed = True
-            for space in edge:
-                if space not in self.placed:
+            for space in self.edges[edge]:
+                if self.positions.index(space) not in self.placed:
                     edge_completed = False
                     break
 
             if edge_completed:
-                points += len(edge)
+                points += len(self.edges[edge])
             else:
-                edges_left.append(edge)
+                available_edges_left.append(edge)
 
-        self.edges = edges_left
+        self.available_edges = tuple(available_edges_left)
 
         return points
 
     def place(self, space):
-        self.available.remove(space)
-        self.placed.append(space)
+        self.available = tuple(x for x in self.available if x != space)
+        self.placed += (space,)
 
         return self.count_points()
 
@@ -85,9 +95,4 @@ class Stratego:
         return len(self.available) == 0
 
     def clone(self):
-        new_stratego = Stratego(self.size)
-        new_stratego.placed = deepcopy(self.placed)
-        new_stratego.edges = deepcopy(self.edges)
-        new_stratego.available = deepcopy(self.available)
-
-        return new_stratego
+        return Stratego(self.size, self.placed, self.available, self.positions, self.edges, self.available_edges)
